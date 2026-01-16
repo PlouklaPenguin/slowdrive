@@ -4,7 +4,7 @@ use bevy::math::{
 };
 use core::ops::{Add, Mul, Sub};
 use rand::{
-    distributions::{Distribution, Standard},
+    distr::{Distribution, StandardUniform},
     seq::SliceRandom,
     Rng, SeedableRng,
 };
@@ -92,7 +92,7 @@ struct PermutationTable {
     values: [u8; TABLE_SIZE],
 }
 
-impl Distribution<PermutationTable> for Standard {
+impl Distribution<PermutationTable> for StandardUniform {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> PermutationTable {
         let mut perm_table = PermutationTable {
             values: core::array::from_fn(|x| x as u8),
@@ -114,7 +114,7 @@ impl PermutationTable {
             real[i * 4 + 3] = (seed >> 24) as u8;
         }
         let mut rng: XorShiftRng = SeedableRng::from_seed(real);
-        rng.gen()
+        rng.random()
     }
 }
 

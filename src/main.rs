@@ -3,7 +3,13 @@ use std::f32::consts::FRAC_PI_2;
 mod perlin;
 
 use bevy::{
-    asset::RenderAssetUsages, color::palettes::basic::SILVER, input::mouse::AccumulatedMouseMotion, math::vec3, prelude::*, render::mesh::PrimitiveTopology, window::{CursorGrabMode, PrimaryWindow}
+    asset::RenderAssetUsages,
+    color::palettes::basic::SILVER,
+    input::mouse::AccumulatedMouseMotion,
+    math::vec3,
+    prelude::*,
+    mesh::PrimitiveTopology,
+    window::{CursorGrabMode, CursorOptions, PrimaryWindow},
 };
 
 use std::hash::{DefaultHasher, Hash, Hasher};
@@ -40,9 +46,10 @@ fn spawn_world(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::default());
-
-
+    let mut mesh = Mesh::new(
+        PrimitiveTopology::TriangleList,
+        RenderAssetUsages::default(),
+    );
 }
 
 fn setup(
@@ -50,9 +57,6 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    
-
-    
     commands.spawn((
         Camera3d::default(),
         Transform::from_xyz(10.0, 12.0, 16.0).looking_at(Vec3::ZERO, Vec3::Y),
@@ -88,7 +92,8 @@ fn move_camera(
     mut query: Query<(&mut Transform, &PlayerCamera, &CameraSensitivity)>,
     window_query: Query<&Window, With<PrimaryWindow>>,
 ) {
-    let (mut c_transform, camera, camera_sensitivity) = query.single_mut();
+    let (mut c_transform, camera, camera_sensitivity) =
+        query.single_mut().expect("Could not find a single camera");
     let immut_trans = c_transform.clone();
 
     let p_window = window_query.single();
@@ -143,17 +148,19 @@ fn move_camera(
 
 fn mouse_lock(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut q_windows: Query<&mut Window, With<PrimaryWindow>>,
+    mut q_windows: Query<&mut CursorOptions, With<PrimaryWindow>>,
 ) {
-    let mut primary_window = q_windows.single_mut();
+    let mut cursor_options = q_windows
+        .single_mut()
+        .expect("could not find single window!!! WHAT");
 
     if keyboard_input.just_pressed(KeyCode::Escape) {
-        if primary_window.cursor_options.grab_mode == CursorGrabMode::Locked {
-            primary_window.cursor_options.grab_mode = CursorGrabMode::None;
-            primary_window.cursor_options.visible = true;
+        if cursor_options.grab_mode == CursorGrabMode::Locked {
+            cursor_options.grab_mode = CursorGrabMode::None;
+            cursor_options.visible = true;
         } else {
-            primary_window.cursor_options.grab_mode = CursorGrabMode::Locked;
-            primary_window.cursor_options.visible = false;
+            cursor_options.grab_mode = CursorGrabMode::Locked;
+            cursor_options.visible = false;
         }
     }
 }
