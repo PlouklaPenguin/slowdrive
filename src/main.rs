@@ -1,6 +1,9 @@
 use std::f32::consts::FRAC_PI_2;
+use std::f32::consts::PI;
 
-mod perlin;
+mod world;
+
+use crate::world::gen::WorldPlugin;
 
 use bevy::{
     asset::RenderAssetUsages,
@@ -16,11 +19,13 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 
 fn main() {
     App::new()
-        .add_plugins((DefaultPlugins,))
+        .add_plugins(DefaultPlugins)
+        .add_plugins(WorldPlugin)
         .add_systems(Startup, (setup))
         .add_systems(Update, (move_camera, mouse_lock))
         .run();
 }
+
 
 #[derive(Component)]
 struct World {
@@ -30,6 +35,7 @@ struct World {
 #[derive(Component)]
 struct PlayerCamera {
     speed: f32,
+    sprint: bool,
 }
 
 #[derive(Component, Debug, Deref, DerefMut)]
@@ -56,47 +62,76 @@ fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    asset_server: Res<AssetServer>
 ) {
     commands.spawn((
         Camera3d::default(),
         Transform::from_xyz(10.0, 12.0, 16.0).looking_at(Vec3::ZERO, Vec3::Y),
-        PlayerCamera { speed: 10.0 },
+        PlayerCamera { speed: 10.0, sprint: false },
         CameraSensitivity::default(),
     ));
 
     commands.spawn((
         Mesh3d(meshes.add(Cuboid::new(1., 1., 1.))),
         MeshMaterial3d(materials.add(Color::Srgba(SILVER))),
-        Transform::from_xyz(0.0, 0.5, 0.0),
+        Transform::from_xyz(0.0, 0., 0.0),
     ));
 
-    commands.spawn((
-        Mesh3d(meshes.add(Circle::new(4.0))),
-        MeshMaterial3d(materials.add(Color::BLACK)),
-        Transform::from_rotation(Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)),
-    ));
+    // commands.spawn((
+    //     Mesh3d(meshes.add(Circle::new(4.0))),
+    //     MeshMaterial3d(materials.add(Color::BLACK)),
+    //     Transform::from_rotation(Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)),
+    // ));
 
+    // commands.spawn((
+    //     Mesh3d(meshes.add(Plane3d::default().mesh().size(20., 20.))),
+    //     MeshMaterial3d(materials.add(Color::srgb(0.3, 0.5, 0.3))), 
+    // ));
     commands.spawn((
-        PointLight {
+        DirectionalLight {
+            illuminance: light_consts::lux::OVERCAST_DAY,
             shadows_enabled: true,
             ..default()
         },
-        Transform::from_xyz(4.0, 8.0, 4.0),
+        Transform {
+            translation: Vec3::new(0., 2., 0.),
+            rotation: Quat::from_rotation_x(-PI / 4.),
+            ..default()
+        }
     ));
+
+
+    // commands.spawn((
+    //     PointLight {
+    //         shadows_enabled: true,
+    //         ..default()
+    //     },
+    //     Transform::from_xyz(4.0, 20.0, 4.0),
+    // ));
 }
 
 fn move_camera(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     timer: Res<Time>,
     mouse_motion: Res<AccumulatedMouseMotion>,
-    mut query: Query<(&mut Transform, &PlayerCamera, &CameraSensitivity)>,
+    mut query: Query<(&mut Transform, &mut PlayerCamera, &CameraSensitivity)>,
     window_query: Query<&Window, With<PrimaryWindow>>,
 ) {
-    let (mut c_transform, camera, camera_sensitivity) =
+    let (mut c_transform, mut camera, camera_sensitivity) =
         query.single_mut().expect("Could not find a single camera");
     let immut_trans = c_transform.clone();
 
     let p_window = window_query.single();
+
+    if keyboard_input.pressed(KeyCode::ShiftLeft) {
+        camera.sprint = true;
+    } else { camera.sprint = false; }
+
+
+    if camera.sprint {
+        camera.speed = 15.;
+    } else {camera.speed = 10.}
+    
 
     if keyboard_input.pressed(KeyCode::Space) {
         c_transform.translation += Vec3::Y * camera.speed * timer.delta_secs();
