@@ -14,31 +14,36 @@ use bevy::{
     window::{CursorGrabMode, CursorOptions, PrimaryWindow},
 };
 
+use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
+
 // use std::hash::{DefaultHasher, Hash, Hasher};
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins
-            .set(WindowPlugin {
-                primary_window: Some(Window {
-                    title: "Bevy Game".to_string(),
-                    canvas: Some("#bevy".to_owned()),
-                    fit_canvas_to_parent: true,
-                    prevent_default_event_handling: false,
+        .add_plugins(
+            DefaultPlugins
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        title: "Bevy Game".to_string(),
+                        canvas: Some("#bevy".to_owned()),
+                        fit_canvas_to_parent: true,
+                        prevent_default_event_handling: false,
+                        ..default()
+                    }),
+                    ..default()
+                })
+                .set(AssetPlugin {
+                    meta_check: AssetMetaCheck::Never,
                     ..default()
                 }),
-                ..default()
-            })
-        .set(AssetPlugin {
-            meta_check: AssetMetaCheck::Never,
-            ..default()
-        }))
+        )
         .add_plugins(GamePlugin)
+        .add_plugins(EguiPlugin::default())
+        .add_plugins(WorldInspectorPlugin::new())
         .add_systems(Startup, setup)
         .add_systems(Update, mouse_lock)
         .run();
 }
-
 
 fn setup(
     mut commands: Commands,
@@ -46,7 +51,6 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
     // asset_server: Res<AssetServer>
 ) {
-
     commands.spawn((
         Mesh3d(meshes.add(Cuboid::new(1., 1., 1.))),
         MeshMaterial3d(materials.add(Color::Srgba(SILVER))),
@@ -61,7 +65,7 @@ fn setup(
 
     // commands.spawn((
     //     Mesh3d(meshes.add(Plane3d::default().mesh().size(20., 20.))),
-    //     MeshMaterial3d(materials.add(Color::srgb(0.3, 0.5, 0.3))), 
+    //     MeshMaterial3d(materials.add(Color::srgb(0.3, 0.5, 0.3))),
     // ));
     commands.spawn((
         DirectionalLight {
@@ -73,10 +77,9 @@ fn setup(
             translation: Vec3::new(0., 5., 0.),
             rotation: Quat::from_rotation_x(-PI / 4.),
             ..default()
-        }
+        },
     ));
 }
-
 
 fn mouse_lock(
     keyboard_input: Res<ButtonInput<KeyCode>>,

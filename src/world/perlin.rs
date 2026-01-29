@@ -1,4 +1,5 @@
-use bevy::math::{ops::floor, Vec2};
+use bevy::math::Vec3;
+use bevy::prelude::ops::{floor, sin};
 
 const PERMUTATION: [u32; 256] = [
     151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69,
@@ -31,10 +32,53 @@ const fn concat_const(p: [u32; 256]) -> [u32; 512] {
     out
 }
 
-
 const P: [u32; 512] = concat_const(PERMUTATION);
 
-pub fn noise(mut x: f32, mut y: f32, mut z: f32) -> f32 {
+pub fn noise(x: Vec3) -> f32 {
+    let i = x.floor();
+    let f = x - x.floor();
+
+    let u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+
+    let ga = hash(Vec3::new(0., 0., 0.) + i);
+    let gb = hash(Vec3::new(1., 0., 0.) + i);
+    let gc = hash(Vec3::new(0., 1., 0.) + i);
+    let gd = hash(Vec3::new(1., 1., 0.) + i);
+    let ge = hash(Vec3::new(0., 0., 1.) + i);
+    let gf = hash(Vec3::new(1., 0., 1.) + i);
+    let gg = hash(Vec3::new(0., 1., 1.) + i);
+    let gh = hash(Vec3::new(1., 1., 1.) + i);
+
+    let va = ga.dot(f - Vec3::new(0., 0., 0.));
+    let vb = gb.dot(f - Vec3::new(1., 0., 0.));
+    let vc = gc.dot(f - Vec3::new(0., 1., 0.));
+    let vd = gd.dot(f - Vec3::new(1., 1., 0.));
+    let ve = ge.dot(f - Vec3::new(0., 0., 1.));
+    let vf = gf.dot(f - Vec3::new(1., 0., 1.));
+    let vg = gg.dot(f - Vec3::new(0., 1., 1.));
+    let vh = gh.dot(f - Vec3::new(1., 1., 1.));
+
+    return va
+        + u.x * (vb - va)
+        + u.y * (vc - va)
+        + u.z * (ve - va)
+        + u.x * u.y * (va - vb - vc + vd)
+        + u.y * u.z * (va - vc - ve + vg)
+        + u.z * u.x * (va - vb - ve + vf)
+        + u.x * u.y * u.z * (-va + vb + vc - vd + ve - vf - vg + vh);
+}
+
+fn hash(p: Vec3) -> Vec3 {
+    let p = Vec3::new(
+        p.dot(Vec3::new(127.1, 311.7, 74.7)),
+        p.dot(Vec3::new(269.5, 183.3, 246.1)),
+        p.dot(Vec3::new(113.5, 271.9, 124.6)),
+    );
+
+    -1.0 + 2.0 * (p.map(|x| sin(x)) * 43758.5453123).fract()
+}
+
+pub fn _noise(mut x: f32, mut y: f32, mut z: f32) -> f32 {
     let lx = floor(x) as u32 & 255;
     let ly = floor(y) as u32 & 255;
     let lz = floor(z) as u32 & 255;

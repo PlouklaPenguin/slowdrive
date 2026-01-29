@@ -1,8 +1,4 @@
-use bevy::{
-    input::mouse::AccumulatedMouseMotion,
-    prelude::*,
-    window::PrimaryWindow
-};
+use bevy::{input::mouse::AccumulatedMouseMotion, prelude::*, window::PrimaryWindow};
 
 use std::f32::consts::FRAC_PI_2;
 
@@ -25,23 +21,22 @@ pub struct CameraPlugin;
 
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
-        app
-        .add_systems(Startup, setup_camera)
-        .add_systems(Update, move_camera);
+        app.add_systems(Startup, setup_camera)
+            .add_systems(Update, move_camera);
     }
 }
 
-fn setup_camera(
-    mut commands: Commands,
-) {
+fn setup_camera(mut commands: Commands) {
     commands.spawn((
         Camera3d::default(),
         Transform::from_xyz(10.0, 12., 16.).looking_at(Vec3::ZERO, Vec3::Y),
-        PlayerCamera { speed: 10.0, sprint: false},
+        PlayerCamera {
+            speed: 10.0,
+            sprint: false,
+        },
         CameraSensitivity::default(),
     ));
 }
-
 
 fn move_camera(
     keyboard_input: Res<ButtonInput<KeyCode>>,
@@ -58,13 +53,15 @@ fn move_camera(
 
     if keyboard_input.pressed(KeyCode::ShiftLeft) {
         camera.sprint = true;
-    } else { camera.sprint = false; }
-
+    } else {
+        camera.sprint = false;
+    }
 
     if camera.sprint {
         camera.speed = 15.;
-    } else {camera.speed = 10.}
-    
+    } else {
+        camera.speed = 10.
+    }
 
     if keyboard_input.pressed(KeyCode::Space) {
         c_transform.translation += Vec3::Y * camera.speed * timer.delta_secs();
