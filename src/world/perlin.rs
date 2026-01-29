@@ -1,4 +1,4 @@
-use bevy::math::{ops::floor, Vec3};
+use bevy::math::{ops::floor, Vec2};
 
 const PERMUTATION: [u32; 256] = [
     151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69,
@@ -30,6 +30,7 @@ const fn concat_const(p: [u32; 256]) -> [u32; 512] {
 
     out
 }
+
 
 const P: [u32; 512] = concat_const(PERMUTATION);
 
