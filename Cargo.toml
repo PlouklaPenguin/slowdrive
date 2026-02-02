@@ -1,17 +1,96 @@
 [package]
 name = "slowdrive"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
+exclude = ["dist", "build", "assets", "credits"]
+
+[features]
+dev = [
+  "bevy/dynamic_linking"
+]
 
 [dependencies]
-bevy = { version = "0.17.3", features = ["dynamic_linking"] }
+bevy = { version = "0.17.3", default-features = false, features = [
+    "std",
+    "async_executor",
+    "animation",
+    "bevy_asset",
+    "bevy_color",
+    "bevy_core_pipeline",
+    "bevy_post_process",
+    "bevy_anti_alias",
+
+    "bevy_gilrs",
+    "bevy_gizmos",
+    "bevy_gltf",
+    "bevy_input_focus",
+    "bevy_log",
+    "bevy_mesh_picking_backend",
+    "bevy_pbr",
+    "bevy_picking",
+    "bevy_render",
+    "bevy_scene",
+    "bevy_image",
+    "bevy_mesh",
+    "bevy_camera",
+    "bevy_light",
+    "bevy_shader",
+    "bevy_sprite",
+    "bevy_sprite_picking_backend",
+    "bevy_sprite_render",
+    "bevy_state",
+    "bevy_text",
+    "bevy_ui",
+    "bevy_ui_picking_backend",
+    "bevy_ui_render",
+    "bevy_window",
+    "bevy_winit",
+    "custom_cursor",
+    "default_font",
+    "hdr",
+    "ktx2",
+    "multi_threaded",
+    "png",
+    "reflect_auto_register",
+    "smaa_luts",
+    "sysinfo_plugin",
+    "tonemapping_luts",
+    "webgl2",
+    "x11",
+    "wayland",
+    "debug",
+    "zstd_rust",
+] }
 bevy-inspector-egui = "0.35.0"
 rand = "0.9.2"
 rand_xorshift = "0.4.0"
+
 bevy_rapier3d = {version = "0.32.0", features = ["simd-nightly", "debug-render-3d", ]}
+# bevy_rapier3d = {version = "0.32.0", features = ["simd", "debug-render-3d", ]}
+webbrowser = {version = "1", features = ["hardened"]}
+winit = {version = "0.30", default-features = false}
+image = { version = "0.25.2", default-features = false }
+## This greatly improves WGPU's performance due to its heavy use of trace! calls
+log = { version = "0.4", features = ["max_level_debug", "release_max_level_warn"] }
+
+[build-dependencies]
+embed-resource = "1"
 
 [profile.dev]
 opt-level = 1
 
 [profile.dev.package."*"]
 opt-level = 3
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+strip = true
+
+[profile.dist]
+inherits = "release"
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true

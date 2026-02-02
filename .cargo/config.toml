@@ -2,6 +2,7 @@
 linker = "clang"
 rustflags = ["-C", "link-arg=-fuse-ld=/usr/bin/mold", "-Zshare-generics=y"]
 
+
 [unstable]
 codegen-backend = true
 

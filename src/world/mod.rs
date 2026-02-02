@@ -1,8 +1,8 @@
 mod chunk;
-mod gen;
+mod generation;
 mod perlin;
 
-use crate::world::gen::{create_chunks, destroy_chunks};
+use crate::world::generation::{create_chunks, destroy_chunks};
 
 use bevy::prelude::*;
 

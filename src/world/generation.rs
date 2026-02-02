@@ -65,10 +65,11 @@ pub fn create_chunks(
                     .insert(
                         Collider::trimesh(
                             vertices,
+                            // MY FISRST TIME VIBECODE!!!! i hope its optimised well :3
                             indices
                                 .chunks(3)
-                                .map(|v| v.try_into().expect("length too long!!!"))
-                                .collect(),
+                                .map(|v| [v[0], v[1], v[2]])//try_into().expect("length too long!!!"))
+                                .collect::<Vec<[u32; 3]>>(),
                         )
                         .expect("failed to build trimesh"),
                     );
