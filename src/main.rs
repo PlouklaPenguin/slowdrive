@@ -14,6 +14,8 @@ use bevy::{
     window::{CursorGrabMode, CursorOptions, PrimaryWindow},
 };
 
+use bevy_rapier3d::prelude::*;
+
 use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 
 // use std::hash::{DefaultHasher, Hash, Hasher};
@@ -37,15 +39,18 @@ fn main() {
                     ..default()
                 }),
         )
+        .add_plugins(RapierPhysicsPlugin::<()>::default())
+        .add_plugins(RapierDebugRenderPlugin::default())
         .add_plugins(GamePlugin)
         .add_plugins(EguiPlugin::default())
         .add_plugins(WorldInspectorPlugin::new())
-        .add_systems(Startup, setup)
+        .add_systems(Startup, setup_world)
         .add_systems(Update, mouse_lock)
         .run();
 }
 
-fn setup(
+
+fn setup_world(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
