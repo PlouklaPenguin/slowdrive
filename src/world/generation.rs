@@ -1,9 +1,8 @@
 use bevy::asset::RenderAssetUsages;
 use bevy::mesh::{Indices, PrimitiveTopology};
-use bevy::prelude::{ops::abs, Vec3, *};
-use bevy::reflect::Enum;
-use bevy_rapier3d::prelude::shape_views::TriangleView;
-use bevy_rapier3d::prelude::*;
+use bevy::prelude::{Vec3, *};
+// use bevy::reflect::Enum;
+use avian3d::prelude::*;
 use std::collections::HashSet;
 
 use crate::player::player::Player;
@@ -38,15 +37,16 @@ pub fn create_chunks(
             let (c_x, c_z) = (((x + p_t[0]) * (CHUNK_SIZE)), ((z + p_t[1]) * (CHUNK_SIZE)));
             let index = ivec2(x + p_t[0], z + p_t[1]);
 
-            let (indices, vertices, uvs) = chunk_builder(c_x as f32, c_z as f32);
+            let (indices, p, uv) = chunk_builder(c_x as f32, c_z as f32);
 
             let world_mesh = Mesh::new(
                 PrimitiveTopology::TriangleList,
                 RenderAssetUsages::default(),
             )
             .with_inserted_indices(Indices::U32(indices.clone()))
-            .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, vertices.clone())
-            .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
+            .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, p.clone())
+            .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uv)
+            .with_computed_normals();
 
             if !chunks.contains(&index) {
                 commands
@@ -62,17 +62,17 @@ pub fn create_chunks(
                         Transform::from_xyz(c_x as f32, 0., c_z as f32),
                         ChunkComponent(ivec2(x + p_t[0], z + p_t[1])),
                     ))
-                    .insert(
+                    .insert((
                         Collider::trimesh(
-                            vertices,
+                            p,
                             // MY FISRST TIME VIBECODE!!!! i hope its optimised well :3
                             indices
                                 .chunks(3)
-                                .map(|v| [v[0], v[1], v[2]])//try_into().expect("length too long!!!"))
+                                .map(|v| [v[0], v[1], v[2]]) //try_into().expect("length too long!!!"))
                                 .collect::<Vec<[u32; 3]>>(),
-                        )
-                        .expect("failed to build trimesh"),
-                    );
+                        ),
+                        RigidBody::Static,
+                    ));
             }
         }
     }
@@ -116,12 +116,13 @@ fn chunk_builder(s_x: f32, s_z: f32) -> (Vec<u32>, Vec<Vec3>, Vec<[f32; 2]>) {
             let tx = x as f32 / (x_vertex_count - 1) as f32;
             let tz = z as f32 / (z_vertex_count - 1) as f32;
             let mut pos = rotation * Vec3::new((-0.5 + tx) * size.x, 0., (-0.5 + tz) * size.y);
-            pos.y = perlin::noise(Vec3::new(
+            let n = perlin::noised(Vec3::new(
                 (pos.x + s_x) * 1. / 128.,
                 0.,
                 (pos.z + s_z) * 1. / 128.,
             )) * SCALE;
 
+            pos.y = n.x;
             positions.push(pos);
             uvs.push([tx, tz]);
         }

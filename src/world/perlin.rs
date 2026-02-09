@@ -1,45 +1,14 @@
-use bevy::math::Vec3;
-use bevy::prelude::ops::{floor, sin};
+use bevy::prelude::ops::sin;
+use bevy::prelude::*;
 
-const PERMUTATION: [u32; 256] = [
-    151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69,
-    142, 8, 99, 37, 240, 21, 10, 23, 190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219,
-    203, 117, 35, 11, 32, 57, 177, 33, 88, 237, 149, 56, 87, 174, 20, 125, 136, 171, 168, 68, 175,
-    74, 165, 71, 134, 139, 48, 27, 166, 77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133, 230,
-    220, 105, 92, 41, 55, 46, 245, 40, 244, 102, 143, 54, 65, 25, 63, 161, 1, 216, 80, 73, 209, 76,
-    132, 187, 208, 89, 18, 169, 200, 196, 135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173,
-    186, 3, 64, 52, 217, 226, 250, 124, 123, 5, 202, 38, 147, 118, 126, 255, 82, 85, 212, 207, 206,
-    59, 227, 47, 16, 58, 17, 182, 189, 28, 42, 223, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163,
-    70, 221, 153, 101, 155, 167, 43, 172, 9, 129, 22, 39, 253, 19, 98, 108, 110, 79, 113, 224, 232,
-    178, 185, 112, 104, 218, 246, 97, 228, 251, 34, 242, 193, 238, 210, 144, 12, 191, 179, 162,
-    241, 81, 51, 145, 235, 249, 14, 239, 107, 49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204,
-    176, 115, 121, 50, 45, 127, 4, 150, 254, 138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243, 141,
-    128, 195, 78, 66, 215, 61, 156, 180,
-];
-
-const fn concat_const(p: [u32; 256]) -> [u32; 512] {
-    let mut out: [u32; 512] = [0; 512];
-    let mut i = 0;
-    loop {
-        if i >= 256 {
-            break;
-        }
-        out[i] = p[i];
-        out[256 + i] = p[i];
-        i += 1;
-    }
-
-    out
-}
-
-const P: [u32; 512] = concat_const(PERMUTATION);
-
-pub fn noise(x: Vec3) -> f32 {
+pub fn noised(x: Vec3) -> Vec4 {
     let i = x.floor();
     let f = x - x.floor();
 
     let u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+    let du = 30.0 * f * f * (f * (f - 2.0) + 1.0);
 
+    // grad
     let ga = hash(Vec3::new(0., 0., 0.) + i);
     let gb = hash(Vec3::new(1., 0., 0.) + i);
     let gc = hash(Vec3::new(0., 1., 0.) + i);
@@ -49,6 +18,7 @@ pub fn noise(x: Vec3) -> f32 {
     let gg = hash(Vec3::new(0., 1., 1.) + i);
     let gh = hash(Vec3::new(1., 1., 1.) + i);
 
+    // Proj
     let va = ga.dot(f - Vec3::new(0., 0., 0.));
     let vb = gb.dot(f - Vec3::new(1., 0., 0.));
     let vc = gc.dot(f - Vec3::new(0., 1., 0.));
@@ -58,7 +28,7 @@ pub fn noise(x: Vec3) -> f32 {
     let vg = gg.dot(f - Vec3::new(0., 1., 1.));
     let vh = gh.dot(f - Vec3::new(1., 1., 1.));
 
-    return va
+    let v: f32 = va
         + u.x * (vb - va)
         + u.y * (vc - va)
         + u.z * (ve - va)
@@ -66,89 +36,29 @@ pub fn noise(x: Vec3) -> f32 {
         + u.y * u.z * (va - vc - ve + vg)
         + u.z * u.x * (va - vb - ve + vf)
         + u.x * u.y * u.z * (-va + vb + vc - vd + ve - vf - vg + vh);
+
+    let d: Vec3 = ga
+        + u.x * (gb - ga)
+        + u.y * (gc - ga)
+        + u.z * (ge - ga)
+        + u.x * u.y * (ga - gb - gc + gd)
+        + u.y * u.z * (ga - gc - ge - gg)
+        + u.z * u.x * (ga - gb - ge + gf)
+        + u.x * u.y * u.z * (-ga + gb + gc - gd + ge - gf - gg + gh)
+        + du * (vec3(vb - va, vc - va, ve - va)
+            + u.yzx() * vec3(va - vb - vc + vd, va - vc - ve + vg, va - vb - ve + vf)
+            + u.zxy() * vec3(va - vb - ve + vf, va - vb - vc + vd, va - vc - ve + vg)
+            + u.yzx() * u.zxy() * (-va + vb + vc - vd + ve - vf - vg + vh));
+
+    return vec4(v, d.x, d.y, d.z);
 }
 
 fn hash(p: Vec3) -> Vec3 {
     let p = Vec3::new(
-        p.dot(Vec3::new(127.1, 311.7, 74.7)),
-        p.dot(Vec3::new(269.5, 183.3, 246.1)),
-        p.dot(Vec3::new(113.5, 271.9, 124.6)),
+        p.dot(vec3(127.1, 311.7, 74.7)),
+        p.dot(vec3(269.5, 183.3, 246.1)),
+        p.dot(vec3(113.5, 271.9, 124.6)),
     );
 
     -1.0 + 2.0 * (p.map(|x| sin(x)) * 43758.5453123).fract()
-}
-
-pub fn _noise(mut x: f32, mut y: f32, mut z: f32) -> f32 {
-    let lx = floor(x) as u32 & 255;
-    let ly = floor(y) as u32 & 255;
-    let lz = floor(z) as u32 & 255;
-
-    x -= floor(x);
-    y -= floor(y);
-    z -= floor(z);
-
-    let u: f32 = fade(x);
-    let v: f32 = fade(y);
-    let w: f32 = fade(z);
-
-    let a = P[lx as usize] + ly;
-    let aa = P[a as usize] + lz;
-    let ab = P[a as usize + 1] + ly;
-    let b = P[lx as usize + 1] + ly;
-    let ba = P[b as usize] + lz;
-    let bb = P[b as usize + 1] + lz;
-
-    return lerp(
-        w,
-        lerp(
-            v,
-            lerp(
-                u,
-                grad(P[aa as usize], x, y, z),
-                grad(P[ba as usize], x - 1., y, z),
-            ),
-            lerp(
-                u,
-                grad(P[ab as usize], x, y - 1., z),
-                grad(P[bb as usize], x - 1., y - 1., z),
-            ),
-        ),
-        lerp(
-            v,
-            lerp(
-                u,
-                grad(P[aa as usize + 1], x, y, z - 1.),
-                grad(P[ba as usize + 1], x - 1., y, z - 1.),
-            ),
-            lerp(
-                u,
-                grad(P[ab as usize + 1], x, y - 1., z - 1.),
-                grad(P[bb as usize + 1], x - 1., y - 1., z - 1.),
-            ),
-        ),
-    );
-    // return p.x*p.z;
-}
-
-fn fade(t: f32) -> f32 {
-    t * t * t * (t * (t * 6. - 15.) + 10.)
-    // t^5 * 6 - 15t + 10t^2
-}
-
-fn lerp(t: f32, a: f32, b: f32) -> f32 {
-    a + t * (b - a)
-}
-
-fn grad(hash: u32, x: f32, y: f32, z: f32) -> f32 {
-    let h = hash & 15; // Convert L0 4 bits of hash code
-    let u = if h < 8 { x } else { y }; // INTO 12 GRADIENT DIRECTIONS
-    let v = if h < 4 {
-        y
-    } else if h == 12 || h == 14 {
-        x
-    } else {
-        z
-    };
-
-    (if h & 1 == 0 { u } else { -u }) + (if h & 2 == 0 { v } else { -v })
 }

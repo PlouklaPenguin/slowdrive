@@ -1,25 +1,15 @@
-// use std::f32::consts::FRAC_PI_2;
 use std::f32::consts::PI;
 
-use slowdrive::GamePlugin;
+use slowdrive::{DepsPlugin, GamePlugin};
 
 use bevy::asset::AssetMetaCheck;
 use bevy::{
-    // asset::RenderAssetUsages,
     color::palettes::basic::SILVER,
-    // input::mouse::AccumulatedMouseMotion,
-    // math::vec3,
     prelude::*,
-    // mesh::PrimitiveTopology,
     window::{CursorGrabMode, CursorOptions, PrimaryWindow},
 };
 
-use bevy_rapier3d::prelude::*;
-
-use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
-// use std::hash::{DefaultHasher, Hash, Hasher};
-
-fn main() {
+fn main() -> AppExit {
     App::new()
         .add_plugins(
             DefaultPlugins
@@ -38,38 +28,22 @@ fn main() {
                     ..default()
                 }),
         )
-        .add_plugins(RapierPhysicsPlugin::<()>::default())
-        .add_plugins(RapierDebugRenderPlugin::default())
+        .add_plugins(DepsPlugin)
         .add_plugins(GamePlugin)
-        .add_plugins(EguiPlugin::default())
-        .add_plugins(WorldInspectorPlugin::new())
         .add_systems(Startup, setup_world)
         .add_systems(Update, mouse_lock)
-        .run();
+        .run()
 }
-
 
 fn setup_world(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    // asset_server: Res<AssetServer>
 ) {
-    commands.spawn((
-        Mesh3d(meshes.add(Cuboid::new(1., 1., 1.))),
-        MeshMaterial3d(materials.add(Color::Srgba(SILVER))),
-        Transform::from_xyz(0.0, 0., 0.0),
-    ));
-
     // commands.spawn((
-    //     Mesh3d(meshes.add(Circle::new(4.0))),
-    //     MeshMaterial3d(materials.add(Color::BLACK)),
-    //     Transform::from_rotation(Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)),
-    // ));
-
-    // commands.spawn((
-    //     Mesh3d(meshes.add(Plane3d::default().mesh().size(20., 20.))),
-    //     MeshMaterial3d(materials.add(Color::srgb(0.3, 0.5, 0.3))),
+    //     Mesh3d(meshes.add(Cuboid::new(1., 1., 1.))),
+    //     MeshMaterial3d(materials.add(Color::Srgba(SILVER))),
+    //     Transform::from_xyz(0.0, 0., 0.0),
     // ));
     commands.spawn((
         DirectionalLight {
@@ -103,13 +77,3 @@ fn mouse_lock(
         }
     }
 }
-
-// fn perlin(x: u32, y: u32) -> u32 {
-//     let hash = calculate_hash(&(x, y));
-// }
-
-// fn calculate_hash<T: Hash>(t: &T) -> u64 {
-//     let mut s = DefaultHasher::new();
-//     t.hash(&mut s);
-//     s.finish()
-// }
