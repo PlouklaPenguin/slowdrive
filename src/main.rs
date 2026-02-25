@@ -4,7 +4,6 @@ use slowdrive::{DepsPlugin, GamePlugin};
 
 use bevy::asset::AssetMetaCheck;
 use bevy::{
-    color::palettes::basic::SILVER,
     prelude::*,
     window::{CursorGrabMode, CursorOptions, PrimaryWindow},
 };
@@ -37,8 +36,8 @@ fn main() -> AppExit {
 
 fn setup_world(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    // mut meshes: ResMut<Assets<Mesh>>,
+    // mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     // commands.spawn((
     //     Mesh3d(meshes.add(Cuboid::new(1., 1., 1.))),

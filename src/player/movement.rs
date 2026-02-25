@@ -1,5 +1,4 @@
 use crate::CHUNK_SIZE;
-use crate::camera::PlayerCamera;
 use crate::player::{Player, input::PlayerActions};
 
 use avian3d::prelude::*;
@@ -8,7 +7,6 @@ use bevy::prelude::*;
 use leafwing_input_manager::prelude::*;
 
 pub fn move_player(
-    mut commands: Commands,
     pq: Single<(Forces, &Transform, &ActionState<PlayerActions>, &mut Player)>,
     cs: Single<&FreeCameraState>,
 ) {
@@ -18,7 +16,7 @@ pub fn move_player(
         for input_direction in PlayerActions::DIRECTIONS {
             if action_state.pressed(&input_direction) {
                 if let Some(direction) = input_direction.direction() {
-                    forces.apply_force(direction * 2000.);
+                    forces.apply_force(direction * player.speed);
                 }
             }
         }

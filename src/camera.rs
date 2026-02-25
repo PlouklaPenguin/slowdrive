@@ -1,15 +1,6 @@
 use bevy::camera_controller::free_camera::{FreeCamera, FreeCameraPlugin, FreeCameraState};
 use bevy::prelude::*;
 
-#[derive(Component, Debug, Deref, DerefMut)]
-struct CameraSensitivity(Vec2);
-
-impl Default for CameraSensitivity {
-    fn default() -> Self {
-        Self(Vec2::new(0.003, 0.002))
-    }
-}
-
 #[derive(Component)]
 pub struct PlayerCamera;
 
@@ -38,11 +29,7 @@ fn setup_camera(mut commands: Commands) {
     ));
 }
 
-fn update_camera_state(
-    mut commands: Commands,
-    input: Res<ButtonInput<KeyCode>>,
-    fcq: Single<&mut FreeCameraState>,
-) {
+fn update_camera_state(input: Res<ButtonInput<KeyCode>>, fcq: Single<&mut FreeCameraState>) {
     let mut fcs = fcq.into_inner();
     if input.just_pressed(KeyCode::KeyB) {
         fcs.enabled = !fcs.enabled;
